@@ -1,0 +1,52 @@
+Group,Feature
+Size & shape,height
+Size & shape,width
+Size & shape,aspect_ratio
+Size & shape,ink_area
+Size & shape,ink_density
+Size & shape,solidity
+Size & shape,eccentricity
+Size & shape,principal_angle
+Size & shape,centroid_x
+Size & shape,centroid_y
+Size & shape,hu1
+Size & shape,hu2
+Stroke thickness & pressure,stroke_width_mean
+Stroke thickness & pressure,stroke_width_std
+Stroke thickness & pressure,stroke_width_p95
+Stroke thickness & pressure,pressure_contrast
+Stroke thickness & pressure,ink_gray_std
+Curvature & stroke structure,curvature_mean
+Curvature & stroke structure,curvature_std
+Curvature & stroke structure,sharp_turn_ratio
+Curvature & stroke structure,tremor_index
+Curvature & stroke structure,dir_0
+Curvature & stroke structure,dir_45
+Curvature & stroke structure,dir_90
+Curvature & stroke structure,dir_135
+Curvature & stroke structure,skeleton_length
+Curvature & stroke structure,n_endpoints
+Curvature & stroke structure,n_junctions
+Curvature & stroke structure,n_components
+Curvature & stroke structure,n_holes
+Pixel-density distribution (3x4 grid),density_r1c1
+Pixel-density distribution (3x4 grid),density_r1c2
+Pixel-density distribution (3x4 grid),density_r1c3
+Pixel-density distribution (3x4 grid),density_r1c4
+Pixel-density distribution (3x4 grid),density_r2c1
+Pixel-density distribution (3x4 grid),density_r2c2
+Pixel-density distribution (3x4 grid),density_r2c3
+Pixel-density distribution (3x4 grid),density_r2c4
+Pixel-density distribution (3x4 grid),density_r3c1
+Pixel-density distribution (3x4 grid),density_r3c2
+Pixel-density distribution (3x4 grid),density_r3c3
+Pixel-density distribution (3x4 grid),density_r3c4
+Projection profiles,hproj_std
+Projection profiles,hproj_skew
+Projection profiles,hproj_kurt
+Projection profiles,hproj_peak_pos
+Projection profiles,vproj_std
+Projection profiles,vproj_skew
+Projection profiles,vproj_kurt
+Projection profiles,vproj_peaks
+Projection profiles,vproj_gap_ratio

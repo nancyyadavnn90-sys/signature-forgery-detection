@@ -1,0 +1,4 @@
+feature,correlated_with,abs_r,reason,experiment
+sharp_turn_ratio,curvature_mean,0.968,|r| > 0.95,1 absolute
+skeleton_length,ink_area,0.951,|r| > 0.95,1 absolute
+ref_dist_min,ref_dist_mean,0.965,|r| > 0.95,2 reference

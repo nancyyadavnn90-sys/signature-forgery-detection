@@ -1,0 +1,17 @@
+# dataset (download separately, ~250 MB)
+data/
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Office temp files
+~$*
+
+# submission copies and the large editable Word file (PDF version is kept)
+submission/
+report/*.docx
+
+# personal viva notes (kept local)
+VIVA_GUIDE.md
