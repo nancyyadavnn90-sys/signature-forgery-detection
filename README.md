@@ -9,6 +9,9 @@ CSE2032 Machine Learning, BML Munjal University (AY 2026-27).
 | Purva Joshi | 240727 |
 | Jiya Joshi | 240954 |
 
+**Live demo:** <https://signature-forgery-detection-c5xxqjncxxfpevbjz4mwvj.streamlit.app>
+(Streamlit Community Cloud) · **Code:** <https://github.com/nancyyadavnn90-sys/signature-forgery-detection>
+
 ## What the system does
 
 Given a scanned **questioned signature** and a few **genuine reference signatures** of the same person
@@ -115,6 +118,9 @@ streamlit run app/streamlit_app.py
 ```
 
 ## Deploy (Streamlit Community Cloud, free)
+
+The app is deployed at <https://signature-forgery-detection-c5xxqjncxxfpevbjz4mwvj.streamlit.app>.
+To deploy your own copy:
 
 1. Push this folder to a public GitHub repository (the `data/` folder is not needed; keep `models/`,
    `app/`, `src/` and `requirements.txt`).
