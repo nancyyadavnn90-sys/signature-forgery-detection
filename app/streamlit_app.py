@@ -18,7 +18,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.verify import MODEL_PATH, load_bundle, verify, pretty, feature_group  # noqa: E402
+from src.verify import MODEL_PATH, load_bundle, verify, prepare_uploads, pretty, feature_group  # noqa: E402
 from src import plotting as P  # noqa: E402
 
 SAMPLES = ROOT / "app" / "samples"
@@ -34,7 +34,13 @@ def get_bundle():
 
 
 def to_gray(file_or_path) -> np.ndarray:
+    from PIL import ImageOps
     with Image.open(file_or_path) as im:
+        im = ImageOps.exif_transpose(im)          # phone photos: apply the camera's rotation flag
+        if im.mode in ("RGBA", "LA", "P"):         # transparent PNGs: put them on white paper
+            im = im.convert("RGBA")
+            bg = Image.new("RGBA", im.size, (255, 255, 255, 255))
+            im = Image.alpha_composite(bg, im)
         return np.asarray(im.convert("L"), dtype=np.uint8)
 
 
@@ -153,8 +159,17 @@ with tab_demo:
 
 # ------------------------------------------------------------------ tab 2
 with tab_upload:
-    st.write("Upload **3-10 genuine reference signatures** of one person and **one questioned signature**. "
-             "Use clean scans on white paper (PNG / JPG).")
+    st.write("Upload **3-10 genuine reference signatures** of one person and **one questioned signature**.")
+    st.info("**Tips for photos:** sign with the same pen on plain white paper, photograph from straight above in "
+            "good light, one signature per image, and crop away the table / fingers. Scanner apps "
+            "(e.g. Google Drive scan, Adobe Scan) give the best results.")
+    c_a, c_b = st.columns(2)
+    do_flatten = c_a.checkbox("Correct uneven lighting / shadows", value=True,
+                              help="Recommended for phone photos. Divides each image by its estimated paper "
+                                   "brightness so that shadows do not look like ink.")
+    do_scale = c_b.checkbox("Rescale to the training resolution", value=True,
+                            help="Recommended for phone photos. Rescales all images with one common factor so "
+                                 "that the signatures have the size the model was trained on (also faster).")
     refs_up = st.file_uploader("Reference signatures (genuine)", type=["png", "jpg", "jpeg", "bmp", "tif"],
                                accept_multiple_files=True)
     q_up = st.file_uploader("Questioned signature", type=["png", "jpg", "jpeg", "bmp", "tif"])
@@ -168,9 +183,19 @@ with tab_upload:
         if not refs_up or len(refs_up) < 3 or q_up is None:
             st.warning("Please upload at least 3 reference signatures and 1 questioned signature.")
         else:
-            with st.spinner("Extracting features and classifying ..."):
-                res = verify(bundle, [to_gray(f) for f in refs_up], to_gray(q_up), threshold)
+            with st.spinner("Preparing images, extracting features and classifying ..."):
+                refs_g, q_g, prep = prepare_uploads([to_gray(f) for f in refs_up], to_gray(q_up),
+                                                    flatten=do_flatten, match_scale=do_scale)
+                res = verify(bundle, refs_g, q_g, threshold)
+            if not 0.6 <= prep["size_ratio"] <= 1.6:
+                st.warning(f"The questioned signature is {prep['size_ratio']:.1f}x the size of the references. "
+                           "If the photos were taken from different distances, retake them from the same "
+                           "distance - otherwise the result is not reliable.")
             show_result(res)
+            with st.expander("What the model actually analysed (after preparation)"):
+                pp = res["preprocessing"]
+                st.image((~pp["ink"]).astype(np.uint8) * 255, caption="Questioned signature, binarised",
+                         width=420)
 
 # ------------------------------------------------------------------ tab 3
 with tab_how:

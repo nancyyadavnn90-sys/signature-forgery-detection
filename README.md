@@ -62,6 +62,22 @@ ROC-AUC 0.831, EER 24.3% -> writer-normalised features (Experiment 2):
 accuracy 90.3%, ROC-AUC 0.970, EER 9.9%.
 <!-- RESULTS END -->
 
+## Robustness checks (saved model, 473 unseen test signatures, app code path)
+
+| Condition | Accuracy | FAR | FRR |
+|---|---|---|---|
+| Original scans, threshold 0.5 (same as the notebook) | 90.3% | 10.2% | 9.1% |
+| Another person's signature claimed as the writer (550 tests) | 100% detected | 0% | - |
+| All images 0.6x / 1.5x size | 89.4% / 90.9% | 15.9% / 6.8% | 3.8% / 12.0% |
+| JPEG q50 · rotation 3° · noise · blur | 91.3% · 91.5% · 89.9% · 92.0% | | |
+| Uneven lighting, no correction | 71.5% | 40.5% | 13.4% |
+| Uneven lighting + background flattening (app upload tab) | 91.3% | 6.8% | 11.0% |
+| Phone-size (4x) + uneven lighting + app corrections | 90.9% | 7.6% | 11.0% |
+| Questioned photo 1.5x larger than references | 55.8% | 0% | 100% (app shows a warning) |
+
+For your own photos: same pen, plain white paper, photographed from straight above at the **same distance**
+for all images, one signature per image. Scanner apps give the best results.
+
 ## Project structure
 
 ```

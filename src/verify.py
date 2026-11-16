@@ -75,6 +75,84 @@ def verify(bundle: dict, reference_grays: list[np.ndarray], questioned_gray: np.
     }
 
 
+# ------------------------------------------------------------------ uploads (phone photos / other scanners)
+# The model was trained on 300-dpi CEDAR scans with even lighting. User uploads are often phone photos:
+# uneven lighting and a different (or varying) scale. Two corrections bring them to CEDAR conditions;
+# both were validated on the unseen test writers (see README, "Robustness checks").
+CEDAR_SIGNATURE_HEIGHT = 196.0      # median signature height (px) in CEDAR
+
+
+def flatten_background(gray: np.ndarray) -> np.ndarray:
+    """Remove shadows / uneven lighting: divide by a smooth estimate of the paper brightness."""
+    from scipy import ndimage as ndi
+    from skimage.transform import resize
+
+    g = np.asarray(gray, dtype=float)
+    step = max(1, int(round(max(g.shape) / 400)))          # estimate on a ~400 px copy (fast)
+    small = g[::step, ::step]
+    k = max(15, int(min(small.shape) / 8))
+    bg = ndi.grey_closing(small, size=(k, k))               # removes dark ink strokes thinner than k
+    bg = ndi.gaussian_filter(bg, k / 2)
+    bg = resize(bg, g.shape, order=1, preserve_range=True)
+    return np.clip(g / np.maximum(bg, 1.0) * 255.0, 0, 255).astype(np.uint8)
+
+
+def ink_height(gray: np.ndarray) -> float:
+    """Height (px) of the signature's ink bounding box, measured quickly on a reduced copy."""
+    from scipy import ndimage as ndi
+    from skimage.filters import threshold_otsu
+    from .features import normalize_intensity
+
+    g = np.asarray(gray, dtype=np.uint8)
+    step = max(1, int(np.ceil(max(g.shape) / 1000)))
+    small = normalize_intensity(g[::step, ::step])
+    small = ndi.median_filter(small, size=3)
+    ink = small <= threshold_otsu(small)
+    lab, n = ndi.label(ink, structure=np.ones((3, 3), bool))
+    if n == 0:
+        return float(g.shape[0])
+    sizes = np.bincount(lab.ravel())
+    keep = sizes >= max(4, 30 / step ** 2)
+    keep[0] = False
+    rows = np.flatnonzero(keep[lab].any(axis=1))
+    return float((rows[-1] - rows[0] + 1) * step) if rows.size else float(g.shape[0])
+
+
+def _rescale(gray: np.ndarray, factor: float) -> np.ndarray:
+    from PIL import Image
+    im = Image.fromarray(np.asarray(gray, dtype=np.uint8))
+    w, h = max(8, int(round(im.width * factor))), max(8, int(round(im.height * factor)))
+    return np.asarray(im.resize((w, h), Image.LANCZOS if factor < 1 else Image.BILINEAR))
+
+
+def prepare_uploads(reference_grays, questioned_gray, flatten: bool = True, match_scale: bool = True):
+    """Bring user images to CEDAR-like conditions before `verify`.
+
+    flatten     - remove uneven lighting / shadows from every image;
+    match_scale - rescale ALL images with ONE common factor so that the references' median signature height
+                  equals the CEDAR median (handles large phone photos and different camera resolutions).
+                  The questioned image is NOT rescaled individually: that would distort its stroke
+                  thickness, one of the most important features. Validation on the unseen test writers:
+                  normal scans 89.9 % -> 91.1 % accuracy, uneven lighting 71.5 % -> 92.0 %,
+                  phone-size images with uneven lighting 90.1 %.
+    info["size_ratio"] = questioned height / median reference height; values far from 1 usually mean the
+    photos were taken from different distances (results then become unreliable).
+    """
+    refs = [np.asarray(g, dtype=np.uint8) for g in reference_grays]
+    q = np.asarray(questioned_gray, dtype=np.uint8)
+    if flatten:
+        refs = [flatten_background(g) for g in refs]
+        q = flatten_background(q)
+    ref_h = float(np.median([ink_height(g) for g in refs]))
+    info = {"flatten": flatten, "match_scale": match_scale, "size_ratio": ink_height(q) / max(ref_h, 1.0)}
+    if match_scale:
+        f = CEDAR_SIGNATURE_HEIGHT / max(ref_h, 1.0)
+        refs = [_rescale(g, f) for g in refs]
+        q = _rescale(q, f)
+        info["scale_factor"] = f
+    return refs, q, info
+
+
 def feature_group(name: str) -> str:
     base = name.replace("dev_", "")
     for g, fs in FEATURE_GROUPS.items():
