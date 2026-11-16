@@ -15,3 +15,6 @@ report/*.docx
 
 # personal viva notes (kept local)
 VIVA_GUIDE.md
+
+# report is submitted separately (keeps it off the public web)
+report/*.pdf
